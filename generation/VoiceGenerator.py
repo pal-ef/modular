@@ -1,11 +1,11 @@
 import json, time, sys, logging
-from urllib import request
+from urllib import request, parse
 import requests
 
 logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-endpoint = "http://127.0.0.1:7851/api"
+endpoint = "http://127.0.0.1:7851"
 
 class VoiceGenerator:
     def __init__(self):
@@ -33,11 +33,24 @@ class VoiceGenerator:
         logger.info("PING Success.")
         return True
 
-    def generate(self, language: str, text_input: str, text_filtering: str = 'standard', voice: str = 'hannah', output_file_name: str = 'dialog', output_file_timestamp: str = 'true', autoplay: str = 'true'):
+    def generate(self, language: str, text_input: str, text_filtering: str = 'standard', voice: str = 'female_01', output_file_name: str = 'dialog', output_file_timestamp: str = 'true', autoplay: str = 'false'):
         logger.info("Queueing text to voice generation endpoint...")
-        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-        data = f'text_input={text_input}&text_filtering={text_filtering}&character_voice_gen={voice}.wav&narrator_enabled=false&narrator_voice_gen=male_01.wav&text_not_inside=character&language={language}&output_file_name={output_file_name}&output_file_timestamp={output_file_timestamp}&autoplay={autoplay}&autoplay_volume=0.8'
-        response = requests.post(endpoint + '/tts-generate', headers=headers, data=data)
+        headers = {"Content-Type": "application/x-www-form-urlencoded"} 
+        data = parse.urlencode({
+            "text_input": text_input.strip(),
+            "text_filtering": text_filtering,
+            "character_voice_gen": voice + ".wav",
+            "narrator_enabled": "false",
+            "narrator_voice_gen": "male_01.wav",
+            "text_not_inside": "character",
+            "language": language,
+            "output_file_name": output_file_name,
+            "output_file_timestamp": output_file_timestamp,
+            "autoplay": autoplay,
+            "autoplay_volume": "0.8"
+        })
+        
+        response = requests.post(endpoint + '/api/tts-generate', headers=headers, data=data)
         response_dict = json.loads(response.text)
         logger.info("Response obtained")
 

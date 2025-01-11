@@ -7,15 +7,13 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 endpoint: str = "http://127.0.0.1:8188"
 
 class ImageGenerator:
-    def __init__(self):
-        # # Check that ComfyUI is running
+    def __init__(self, style: str = "default"):
+        # Check that ComfyUI is running
         # req = request.Request("http://127.0.0.1:8188/prompt")
         # request.urlopen(req)
-        # if req.getcode() != 200:
-        #     logger.critical("ComfyUI is not running.")
-
-        # Load workflow from JSON
-        with open("workflow.json", "r", encoding="utf-8") as f:
+        # if req.getcode() != 200: logger.critical("ComfyUI is not running.")
+        self.set_style = style
+        with open(style + ".json", "r", encoding="utf-8") as f:
             self.workflow = f.read()
 
     def queue_prompt(self, prompt: str):
@@ -28,14 +26,24 @@ class ImageGenerator:
 
         return True
 
-    def text_to_image(self, text, id: int):
+    def text_to_image(self, text, id: int, style: str):
+        if style != self.set_style:
+            logger.info(f"Changing worflow from {self.set_style} to {style}")
+            self.set_style = style
+            self.workflow = None
+            with open(style + ".json", "r", encoding="utf-8") as f:
+                self.workflow = f.read()
+
+        logger.info(f"Loading workflow '{style + ".json"}'")
         prompt = json.loads(self.workflow)
+
         #set the text prompt for our positive CLIPTextEncode
-        prompt["6"]["inputs"]["text"] = text
+        prompt["3"]["inputs"]["text"] += text
         #set the seed for our KSampler node
-        prompt["3"]["inputs"]["seed"] = random.randrange(1, 999999)
+        prompt["2"]["inputs"]["seed"] = random.randrange(1, 999999999999999)
         #set image name prefix
-        prompt["13"]["inputs"]["filename_prefix"] = str(id)
+        prompt["12"]["inputs"]["filename_prefix"] = str(id)
+        
         if not self.queue_prompt(prompt):
             return False
         

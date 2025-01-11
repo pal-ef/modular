@@ -9,7 +9,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 class CardTextGenerator:
-    def __init__(self, model: str, template: str = card_generation_template, max_tries: int = 2) -> None:
+    def __init__(self, model: str, template: str = card_generation_template, max_tries: int = 10) -> None:
         self.tries = 0
         self.max_tries = max_tries
 
@@ -36,8 +36,10 @@ class CardTextGenerator:
 
         # Start card generation from input
         response = self.chain.invoke({"input": input, "user_language": user_language, "target_language": target_language})
-        # Trim down markdown syntax
+        
+        # Trim down markdown syntax: OMITTED, DEPENDS ON MODEL
         str_json: str = ''.join(response.splitlines()[1:-1])
+        #str_json: str = response # tmp fix
         logger.info(str_json)
         
         # Validate JSON

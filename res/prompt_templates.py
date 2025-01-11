@@ -14,8 +14,9 @@ Translate from {user_language} to {target_language}.
 Format:
 {{
     "original_input": "{input}",
-    "closest_translations": [THIS NEEDS TO BE FILLED WITH STRINGS OF CLOSEST TRANSLATIONS OF {input} IN {user_language}, MINIMUM IS 1 TRANSLATION BUT 3 IS PREFFERED],
-    "definition": "DEFINITION OF '{input}' IN {user_language}.",
+    "closest_translations": [FILLED WITH STRINGS. TRANSLATIONS OF "{input}" in {user_language}. MINIMUM IS 1 TRANSLATION BUT 3 IS PREFFERED],
+    "definition": "THIS NEED TO BE FILLED WITH THE DEFINITION OF THE WORD/PHRASE IN {user_language}.",
+    "is_translation_correct": BOOLEAN SET TO TRUE IF closest_translations AND definition ARE IN {user_language}, OTHERWISE FALSE,
     "examples": [THIS NEEDS TO BE FILLED WITH 3 STRINGS CONTAINING EXAMPLES OF THE USAGE OF INPUT IN {target_language}.],
     "image_prompt": "REPLACE WITH DESCRIPTION OF IMAGE PROMPT FOR AI GENERATION RELATED TO {input} (IMPORTANT THAT THIS IS IN ENGLISH)."
 }}

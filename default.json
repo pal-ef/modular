@@ -34,15 +34,15 @@
   },
   "5": {
     "inputs": {
-      "width": 1000,
-      "height": 600,
+      "width": 832,
+      "height": 1216,
       "batch_size": 1
     },
     "class_type": "EmptyLatentImage"
   },
   "6": {
     "inputs": {
-      "text": "A young character from an anime or manga series getting a wedgie, exaggerated and comedic style.",
+      "text": "A young character from an anime or manga series, exaggerated and comedic style.",
       "clip": [
         "4",
         1

@@ -1,19 +1,10 @@
 ### Generate Flashcard
-POST http://localhost:5001/api/v1/generate
+POST http://127.0.0.1:8000/generate
 Content-Type: application/json
 
 {
-  "max_context_length": 2048,
-  "max_length": 100,
-  "prompt": "You are a flashcard generation system, please LIMIT yourself to returning the JSON like output, don't engage in conversation, just reply with the output is VERY CRITICAL. ORIGINAL WORD is Spanish, WORD_IN_TARGET_LANGUAGE should be in Spanish. Please return only the flashcard in the following JSON like format: {front_word: \"ORIGINAL_WORD\", back_word: \"WORD_IN_TARGET_LANGUAGE\"}. WORD: Sentarse",
-  "quiet": false,
-  "rep_pen": 1.1,
-  "rep_pen_range": 256,
-  "rep_pen_slope": 1,
-  "temperature": 0.3,
-  "tfs": 1,
-  "top_a": 0,
-  "top_k": 100,
-  "top_p": 0.9,
-  "typical": 1
+  "word": "School",
+  "user_language": "Spanish",
+  "target_language": "English",
+  "style": "realistic",
 }
