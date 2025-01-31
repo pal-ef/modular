@@ -1,19 +1,32 @@
 from generation.CardTextGenerator import CardTextGenerator
 from generation.ImageGenerator import ImageGenerator
 from generation.VoiceGenerator import VoiceGenerator
-import sys, logging, json
+import sys, logging, json, random
+from pathlib import Path
+
 
 logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 class CardGenerator:
-    def __init__(self, model: str = "phi4", workflow: str = "default"):
+    def __init__(self, model: str = "phi4", style: str = "default"):
         self.text_generator = CardTextGenerator(model) #qwen2.5
-        self.image_generator = ImageGenerator(workflow)
+        self.image_generator = ImageGenerator(style)
         self.voice_generator = VoiceGenerator()
 
     def generate_identifier(self) -> str:
-        return "1"
+        number_of_tries = 0
+        identifier = str(random.randrange(1, 999999999999999))
+        my_file = Path(f"/home/jin/Projects/FrontEnd-Modular/public/{identifier}_00001_.png")
+        while my_file.is_file() and number_of_tries < 5000:
+            identifier = random.randrange(1, 999999999999999)
+            my_file = Path(f"/home/jin/Projects/FrontEnd-Modular/public/{identifier}_00001_.png")
+            number_of_tries += 1
+
+        if number_of_tries >= 5000:
+            return "failure"
+
+        return identifier
 
     def generate_card(self, input: str, user_language: str, target_language: str, style: str = "default", voice: str = "female_06",):
         # Self configuration
@@ -22,6 +35,11 @@ class CardGenerator:
 
         logger.info("Generating card...")
         card = self.text_generator.text_to_card(input, user_language, target_language)
+        
+        if not card:
+            logger.critical("Card generation failed.")
+            return False
+        
         logger.info("Text generation succesful.")
         examples = card["examples"]
 
@@ -37,11 +55,13 @@ class CardGenerator:
             card["examples_audio_path"].append(response["output_file_path"])
 
         UID = self.generate_identifier()
-        card.update({"UID": UID})
-
-        if not card:
+        if UID == "failure":
+            logger.critical("WARNING: UNIQUE IDENTIFIERS ARE NOT BEING GENERATED!")
             return False
         
+        card.update({"id": UID})
+        card.update({"image": UID + "_00001_.png"})
+
         self.image_generator.text_to_image(card["image_prompt"], UID, style)
 
         return card

@@ -15,10 +15,9 @@ Format:
 {{
     "original_input": "{input}",
     "closest_translations": [FILLED WITH STRINGS. TRANSLATIONS OF "{input}" in {user_language}. MINIMUM IS 1 TRANSLATION BUT 3 IS PREFFERED],
-    "definition": "THIS NEED TO BE FILLED WITH THE DEFINITION OF THE WORD/PHRASE IN {user_language}.",
-    "is_translation_correct": BOOLEAN SET TO TRUE IF closest_translations AND definition ARE IN {user_language}, OTHERWISE FALSE,
+    "definition": "THIS NEED TO BE FILLED WITH THE DEFINITION OF THE WORD/PHRASE IN {user_language}. (IMPORTANT THIS IS IN {user_language})",
     "examples": [THIS NEEDS TO BE FILLED WITH 3 STRINGS CONTAINING EXAMPLES OF THE USAGE OF INPUT IN {target_language}.],
-    "image_prompt": "REPLACE WITH DESCRIPTION OF IMAGE PROMPT FOR AI GENERATION RELATED TO {input} (IMPORTANT THAT THIS IS IN ENGLISH)."
+    "image_prompt": "REPLACE WITH DESCRIPTION PROMPT FOR AI IMAGE GENERATION RELATED TO {input}. DESCRIBE EVERY VISUAL ASPECT BUT KEEP IT SIMPLE, AVOID NOVEL WRITING. EXAMPLE: "tree, forest background, kids smilings, playing with toys". (IMPORTANT THAT THIS IS IN ENGLISH)."
 }}
 
 Output (JSON):

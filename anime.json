@@ -8,8 +8,8 @@
   "2": {
     "inputs": {
       "seed": 656939348394365,
-      "steps": 12,
-      "cfg": 5,
+      "steps": 24,
+      "cfg": 6,
       "sampler_name": "euler_ancestral",
       "scheduler": "normal",
       "denoise": 1,
@@ -34,7 +34,7 @@
   },
   "3": {
     "inputs": {
-      "text": "sfw, safe, ",
+      "text": "masterpiece,best quality,amazing quality,sfw,safe,detailed,",
       "clip": [
         "10",
         0
@@ -44,7 +44,7 @@
   },
   "4": {
     "inputs": {
-      "text": "bad quality,worst quality,worst detail,sketch, nfsw, genitals, genitalia, vagina, penis, pussy, boobs, dick, nudity, adult content, character design, text",
+      "text": "Base:bad quality,bad quality,worst quality,worst detail,sketch, nfsw, genitals, genitalia, vagina, penis, pussy, boobs, dick, nudity, adult content, character design, text",
       "clip": [
         "10",
         0

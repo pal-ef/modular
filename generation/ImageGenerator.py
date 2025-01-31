@@ -34,15 +34,22 @@ class ImageGenerator:
             with open(style + ".json", "r", encoding="utf-8") as f:
                 self.workflow = f.read()
 
-        logger.info(f"Loading workflow '{style + ".json"}'")
         prompt = json.loads(self.workflow)
+        logger.info(f"prompt: {self.workflow}")
 
-        #set the text prompt for our positive CLIPTextEncode
-        prompt["3"]["inputs"]["text"] += text
-        #set the seed for our KSampler node
-        prompt["2"]["inputs"]["seed"] = random.randrange(1, 999999999999999)
-        #set image name prefix
-        prompt["12"]["inputs"]["filename_prefix"] = str(id)
+        if style == "default":
+            prompt["6"]["inputs"]["text"] += text
+            #set the seed for our KSampler node
+            prompt["3"]["inputs"]["seed"] = random.randrange(1, 999999999999999)
+            #set image name prefix
+            prompt["13"]["inputs"]["filename_prefix"] = str(id)
+        elif style == "anime":
+            #set the text prompt for our positive CLIPTextEncode
+            prompt["3"]["inputs"]["text"] += text
+            #set the seed for our KSampler node
+            prompt["2"]["inputs"]["seed"] = random.randrange(1, 999999999999999)
+            #set image name prefix
+            prompt["12"]["inputs"]["filename_prefix"] = str(id)
         
         if not self.queue_prompt(prompt):
             return False
