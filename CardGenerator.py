@@ -1,12 +1,14 @@
 from generation.CardTextGenerator import CardTextGenerator
 from generation.ImageGenerator import ImageGenerator
 from generation.VoiceGenerator import VoiceGenerator
-import sys, logging, json, random
+import sys, logging, json, random, os, shutil
 from pathlib import Path
 
 
 logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
+
 
 class CardGenerator:
     def __init__(self, model: str = "phi4", style: str = "default"):
@@ -52,7 +54,9 @@ class CardGenerator:
             logger.info(f"Generating voice for example in {voice_lang}: {example}")
             response = self.voice_generator.generate(voice_lang, example, 'standard', voice, 'example')
             print(json.dumps(response, indent=4))
-            card["examples_audio_path"].append(response["output_file_path"])
+            new_path = "/home/jin/Projects/FrontEnd-Modular/public/" + response["output_file_path"][34:]
+            shutil.move(response["output_file_path"], new_path)
+            card["examples_audio_path"].append(response["output_file_path"][34:])
 
         UID = self.generate_identifier()
         if UID == "failure":
