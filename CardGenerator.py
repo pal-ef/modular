@@ -54,9 +54,9 @@ class CardGenerator:
             logger.info(f"Generating voice for example in {voice_lang}: {example}")
             response = self.voice_generator.generate(voice_lang, example, 'standard', voice, 'example')
             print(json.dumps(response, indent=4))
-            new_path = "/home/jin/Projects/FrontEnd-Modular/public/" + response["output_file_path"][34:]
+            new_path = "/home/jin/Projects/FrontEnd-Modular/public/" + response["output_file_path"][39:]
             shutil.move(response["output_file_path"], new_path)
-            card["examples_audio_path"].append(response["output_file_path"][34:])
+            card["examples_audio_path"].append(response["output_file_path"][39:])
 
         UID = self.generate_identifier()
         if UID == "failure":

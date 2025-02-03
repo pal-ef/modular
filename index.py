@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from typing import List
+from bson import ObjectId
 
 
 app = FastAPI()
@@ -44,6 +45,13 @@ except Exception as e:
 
 cardgen = CardGenerator.CardGenerator("phi4", "default")
 
+def convert_to_dict(cursor):
+    return [
+        {**doc, "_id": str(doc["_id"])} if "_id" in doc else doc
+        for doc in cursor
+    ]
+
+
 class Card(BaseModel):
     text: str
     user_language: str
@@ -67,7 +75,6 @@ class Save(BaseModel):
 class Fetch(BaseModel):
     deck_name: str
     deck_owner: str
-    card_id: str
 
 collection = client['flashcards']['cards']
 
@@ -84,6 +91,9 @@ def generate_card(obj: Card):
 
     data = cardgen.generate_card(text, user_language, target_language, style)
     
+    data["part-of"] = "Japones"
+    data["owner"] = "Randy"
+
     json_compatible_item_data = jsonable_encoder(data)
 
     collection = client['flashcards']['cards']
@@ -124,7 +134,7 @@ def get_decks():
 
 
 @app.post("/save")
-def create_deck(obj: Save):
+def save_deck(obj: Save):
     deck_name = obj.deck_name
     deck_owner = obj.deck_owner
     card_id = obj.card_id
@@ -143,16 +153,21 @@ def create_deck(obj: Save):
     return {"message": "Explicit 200"}
 
 @app.post("/fetch-cards")
-def create_deck(obj: Fetch):
+def fetch_cards(obj: Fetch):
     deck_owner = obj.deck_owner
     deck_name = obj.deck_name
 
+    print(deck_owner)
+    print(deck_name)
+
     collection = client['flashcards']['cards']
 
-    filter_query = {"part_of": deck_name, "owner": deck_owner}
+    filter_query = {"part-of": deck_name, "owner": deck_owner}
     result = collection.find(filter_query)
 
-    return result
+    result_list = convert_to_dict(result)
+
+    return result_list
 
 
 @app.get("/{item_id}")
