@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from typing import List
-from bson import ObjectId
+from datetime import datetime, timezone, timedelta
 
 
 app = FastAPI()
@@ -54,6 +54,7 @@ def convert_to_dict(cursor):
 
 class Card(BaseModel):
     text: str
+    owner: str
     user_language: str
     target_language: str
     style: str
@@ -70,37 +71,31 @@ class Deck(BaseModel):
 class Save(BaseModel):
     deck_name: str
     deck_owner: str
-    card_id: str
+    card: object
+    id: str
 
 class Fetch(BaseModel):
     deck_name: str
     deck_owner: str
 
+class Good(BaseModel):
+    id: str
+    review: datetime
+    retained: int
+    owner: str
+
 collection = client['flashcards']['cards']
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
 
 @app.post("/generate")
 def generate_card(obj: Card):
-    text = obj.text
-    user_language = obj.user_language
-    target_language = obj.target_language
-    style = obj.style
-
-    data = cardgen.generate_card(text, user_language, target_language, style)
-    
-    data["part-of"] = "Japones"
-    data["owner"] = "Randy"
-
-    json_compatible_item_data = jsonable_encoder(data)
-
     collection = client['flashcards']['cards']
 
-    # Save into database
-    print("Attempting to save to database...")
-    collection.insert_one(data)
+    # Generate card
+    data = cardgen.generate_card(obj.text, obj.user_language, obj.target_language, obj.style)
+    # Add owner to card
+    data["owner"] = obj.owner
+    json_compatible_item_data = jsonable_encoder(data)
 
     return JSONResponse(content=json_compatible_item_data)
 
@@ -135,16 +130,28 @@ def get_decks():
 
 @app.post("/save")
 def save_deck(obj: Save):
-    deck_name = obj.deck_name
-    deck_owner = obj.deck_owner
-    card_id = obj.card_id
+    # First save card to database
+    collection = client['flashcards']['cards']
+    card = obj.card
+    card["part-of"] = obj.deck_name
+    card["retained"] = 1
+    card["review"] = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    card["last_reviewed"] = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    queried = collection.insert_one(card)
 
+    # Check if deck has cards, if not then assign image
     collection = client['flashcards']['decks']
+    query = {"name": obj.deck_name,  "owner": obj.deck_owner, "cards": {"$ne": []}}
+    has_cards = collection.find_one(query)
+    
+    filter_query = {"name": obj.deck_name, "owner": obj.deck_owner}
+    if not has_cards:
+        update_query = {"$set": {"image": card['image']}}  
+        collection.update_one(filter_query, update_query)
 
-
+    # Now add card to collection
     # Define filter and update
-    filter_query = {"name": deck_name, "owner": deck_owner}
-    update_query = {"$push": {"cards": card_id}}  
+    update_query = {"$push": {"cards": obj.id}}  
     result = collection.update_one(filter_query, update_query)
 
     print(f"Matched: {result.matched_count}, Modified: {result.modified_count}")
@@ -154,21 +161,51 @@ def save_deck(obj: Save):
 
 @app.post("/fetch-cards")
 def fetch_cards(obj: Fetch):
-    deck_owner = obj.deck_owner
-    deck_name = obj.deck_name
-
-    print(deck_owner)
-    print(deck_name)
-
     collection = client['flashcards']['cards']
 
-    filter_query = {"part-of": deck_name, "owner": deck_owner}
+    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) 
+
+    filter_query = {"part-of": obj.deck_name, "owner": obj.deck_owner, "review": {"$lte": today}}
     result = collection.find(filter_query)
 
     result_list = convert_to_dict(result)
 
     return result_list
 
+@app.post("/good")
+def good(obj: Good):
+    collection = client['flashcards']['cards']
+
+    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) 
+    new_retained = int(obj.retained * 2.35)
+    new_review_date = obj.review + timedelta(days=new_retained)
+
+    filter_query = {"id": obj.id, "owner": obj.owner}
+    update_query = {"$set": {"review": new_review_date, "last_reviewed": today, "retained": new_retained}}  
+
+    # Update card to new review date and new retained days    
+    result = collection.update_one(filter_query, update_query)
+    
+    print(f"Matched: {result.matched_count}, Modified: {result.modified_count}")
+    # Return good if created successfully
+    return {"message": "Explicit 200"}
+
+@app.post("/bad")
+def good(obj: Good):
+    collection = client['flashcards']['cards']
+
+    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) 
+    new_review_date = today + timedelta(days=1)
+
+    filter_query = {"id": obj.id, "owner": obj.owner}
+    update_query = {"$set": {"review": new_review_date, "last_reviewed": today, "retained": 1}}  
+
+    # Update card to new review date and new retained days    
+    result = collection.update_one(filter_query, update_query)
+    
+    print(f"Matched: {result.matched_count}, Modified: {result.modified_count}")
+    # Return good if created successfully
+    return {"message": "Explicit 200"}
 
 @app.get("/{item_id}")
 def read_item(item_id: int, q: Union[str, None] = None):

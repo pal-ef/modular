@@ -12,7 +12,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 class CardGenerator:
     def __init__(self, model: str = "phi4", style: str = "default"):
-        self.text_generator = CardTextGenerator(model) #qwen2.5
+        self.text_generator = CardTextGenerator(model) # used to be qwen2.5
         self.image_generator = ImageGenerator(style)
         self.voice_generator = VoiceGenerator()
 
@@ -26,14 +26,15 @@ class CardGenerator:
             number_of_tries += 1
 
         if number_of_tries >= 5000:
-            return "failure"
+            return "Failed to generate unique identifier"
 
         return identifier
 
     def generate_card(self, input: str, user_language: str, target_language: str, style: str = "default", voice: str = "female_06",):
-        # Self configuration
         voice_lang = "en"
         if target_language == "Spanish": voice_lang = "es"
+        elif target_language == "Japanese": voice_lang = "ja"
+        elif target_language == "French": voice_lang = "fr"
 
         logger.info("Generating card...")
         card = self.text_generator.text_to_card(input, user_language, target_language)

@@ -6,17 +6,16 @@ OUTPUTTING ANYTHING ELSE THAN THE REQUIRED OUTPUT BELOW IS EXTREMELY DANGEROUS F
 Intructions:
 You are a flash card generator software specialized in language learning, you will be getting an input phrase or sentence and your task is fill, meaning replace any field left empty.
 Inside the format there are sections that require special attention, you will be given the instructions on how to fill them.
-Return the format in JSON.
+Return the format in JSON. 
 
 Information:
 Translate from {user_language} to {target_language}.
 
 Format:
 {{
-    "original_input": "{input}",
-    "closest_translations": [FILLED WITH STRINGS. TRANSLATIONS OF "{input}" in {user_language}. MINIMUM IS 1 TRANSLATION BUT 3 IS PREFFERED],
+    "closest_translations": [TRANSLATIONS OF "{input}" TO {user_language}],
     "definition": "THIS NEED TO BE FILLED WITH THE DEFINITION OF THE WORD/PHRASE IN {user_language}. (IMPORTANT THIS IS IN {user_language})",
-    "examples": [THIS NEEDS TO BE FILLED WITH 3 STRINGS CONTAINING EXAMPLES OF THE USAGE OF INPUT IN {target_language}.],
+    "examples": [3 STRINGS CONTAINING EXAMPLES OF THE USAGE OF INPUT ("{input}") IN {target_language}.],
     "image_prompt": "REPLACE WITH DESCRIPTION PROMPT FOR AI IMAGE GENERATION RELATED TO {input}. DESCRIBE EVERY VISUAL ASPECT BUT KEEP IT SIMPLE, AVOID NOVEL WRITING. EXAMPLE: "tree, forest background, kids smilings, playing with toys". (IMPORTANT THAT THIS IS IN ENGLISH)."
 }}
 

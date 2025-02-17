@@ -15,7 +15,8 @@ class CardTextGenerator:
 
         # Loading model
         logger.info(f"Initializing Ollama with model {model}...")
-        self.model = OllamaLLM(model = model)
+        self.model = OllamaLLM(model = model, num_ctx=2048)
+        self.model.cache = False
         logger.info("Model completely loaded in memory.")
         
         # Loading template
@@ -29,6 +30,17 @@ class CardTextGenerator:
 
         logger.info("Card Text Generator is ready.")
     
+    def markdown_to_txt(self, markdown: str):
+        if "```json" in markdown:
+            txt = markdown.split("```json")[1]
+            txt = txt.split("```")[0]
+        elif "```":
+            txt = markdown.split("```")[1]
+        else:
+            return markdown
+        
+        return txt
+
     def text_to_card(self, input: str, user_language: str, target_language: str):
         if self.tries > self.max_tries:
             logger.critical(f"Failed to generate proper card after {self.max_tries} intends.")
@@ -38,7 +50,10 @@ class CardTextGenerator:
         response = self.chain.invoke({"input": input, "user_language": user_language, "target_language": target_language})
         
         # Trim down markdown syntax: OMITTED, DEPENDS ON MODEL
-        str_json: str = ''.join(response.splitlines()[1:-1])
+        #response = response.split("</think>")[1] #for thought chain models
+        logger.info(response)
+        #str_json: str = ''.join(response.splitlines()[1:-1]) # previous method
+        str_json = self.markdown_to_txt(response)
         #str_json: str = response # tmp fix
         logger.info(str_json)
         
@@ -46,10 +61,14 @@ class CardTextGenerator:
         try:
             logger.info("Trying to convert str to JSON...")
             result = json.loads(str_json)
+            result["original_input"] = input
+
             return result
         except ValueError as error:
-            logger.warning("Unable to generate card from generated output. Retrying...")
+            logger.debug("Since failed to parse generated text, clearing cache...")
+
             logger.debug(error)
+            logger.warning("Unable to generate card from generated output. Retrying...")
             self.tries += 1
             self.text_to_card(input, user_language, target_language)
     
