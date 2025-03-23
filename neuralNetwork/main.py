@@ -37,15 +37,13 @@ def neural_network():
         userData.append(normalized_user)
         userLevel.append(i["nivel"])
         
-    print(len(userData))
     userData = np.array(userData)
     userLevel = np.array(userLevel)
     userLevel = userLevel.astype(int)
 
+    print(len(userData))
     print(type(userData))  
     print(type(userLevel))  
-
-
 
     inputLayer = tf.keras.layers.Dense(units=16, activation='relu', input_shape=[8])
     hiddenLayer = tf.keras.layers.Dense(units=8,activation='relu')
@@ -64,28 +62,6 @@ def neural_network():
 
     test_loss, test_acc = model.evaluate(userData, userLevel)
     print("Precisión en test:", test_acc)
-
-    newUsers=[
-        [0.9291, 5.5150, 43, 649, 205, 4.7674, 98, 0.0930], #2
-        [0.7156, 9.5786, 28, 401, 159, 5.6786, 73, 0.0364], #2
-        [0.6809, 7.3096, 26, 303, 136, 5.2308, 48, -0.0357],  #2       
-        [0.9428, 9.6019, 76, 391, 315, 4.1447, 54, -0.0213], #2
-        [0.4667, 6.8251, 7, 147, 39, 5.5714, 34, 0.0833], #1
-        [0.8143, 7.9129, 58, 297, 241, 4.1552, 33, 0.1515], #1
-        [0.6825, 11.5290, 12, 65, 60, 5.0000, 20, -0.1250], #0
-        [0.8085, 12.3136, 41, 656, 215, 5.2439, 12, 0.2000] #0
-]
-
-    normalized_newUsers = [normalizeData(user) for user in newUsers]
-    normalized_newUsers = np.array(normalized_newUsers)
-
-    predictions = model.predict(normalized_newUsers)
-    
-    for i, prediction in enumerate(predictions):
-        predicted_class = np.argmax(prediction)  # El índice de la clase con la probabilidad más alta
-        print(f"Predicción para el usuario {i+1}:")
-        print("Predicción:", prediction)
-        print("Clase predicha:", predicted_class)
 
 def normalizeData(user):
     min_vals = [0, 0, 1, 10, 1, 1, 1, -1]
