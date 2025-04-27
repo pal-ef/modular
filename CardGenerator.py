@@ -19,10 +19,10 @@ class CardGenerator:
     def generate_identifier(self) -> str:
         number_of_tries = 0
         identifier = str(random.randrange(1, 999999999999999))
-        my_file = Path(f"/home/jin/Projects/FrontEnd-Modular/public/{identifier}_00001_.png")
+        my_file = Path(f"/home/jin/Code/modular/workflow/FrontEnd-Modular/public/{identifier}_00001_.png")
         while my_file.is_file() and number_of_tries < 5000:
             identifier = random.randrange(1, 999999999999999)
-            my_file = Path(f"/home/jin/Projects/FrontEnd-Modular/public/{identifier}_00001_.png")
+            my_file = Path(f"/home/jin/Code/modular/FrontEnd-Modular/public/{identifier}_00001_.png")
             number_of_tries += 1
 
         if number_of_tries >= 5000:
@@ -55,7 +55,7 @@ class CardGenerator:
             logger.info(f"Generating voice for example in {voice_lang}: {example}")
             response = self.voice_generator.generate(voice_lang, example, 'standard', voice, 'example')
             print(json.dumps(response, indent=4))
-            new_path = "/home/jin/Projects/FrontEnd-Modular/public/" + response["output_file_path"][39:]
+            new_path = "/home/jin/Code/modular/FrontEnd-Modular/public/" + response["output_file_path"][39:]
             shutil.move(response["output_file_path"], new_path)
             card["examples_audio_path"].append(response["output_file_path"][39:])
 
