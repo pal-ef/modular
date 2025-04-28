@@ -1,7 +1,6 @@
 from typing import Union
 from fastapi import FastAPI
 from pydantic import BaseModel
-import CardGenerator
 from bson import ObjectId
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
@@ -12,6 +11,7 @@ from pymongo.server_api import ServerApi
 from typing import List
 from datetime import datetime, timezone, timedelta
 
+from Generator import Generator
 
 app = FastAPI()
 
@@ -45,7 +45,7 @@ try:
 except Exception as e:
     print(e)
 
-cardgen = CardGenerator.CardGenerator("phi4", "default")
+generator = Generator("phi4", "default")
 
 def convert_to_dict(cursor):
     return [
@@ -100,7 +100,7 @@ def generate_card(obj: Card):
     collection = client['flashcards']['cards']
 
     # Generate card
-    data = cardgen.generate_card(obj.text, obj.user_language, obj.target_language, obj.style)
+    data = generator.generate_card(obj.text, obj.user_language, obj.target_language, obj.style)
     # Add owner to card
     data["owner"] = obj.owner
     json_compatible_item_data = jsonable_encoder(data)
