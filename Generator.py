@@ -1,4 +1,5 @@
 from generation.CardTextGenerator import CardTextGenerator
+from generation.GenericGenerator import GenericTextGenerator
 from generation.ImageGenerator import ImageGenerator
 from generation.VoiceGenerator import VoiceGenerator
 import sys, logging, json, random, os, shutil
@@ -7,9 +8,11 @@ from pathlib import Path
 logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-class CardGenerator:
+class Generator:
     def __init__(self, model: str = "phi4", style: str = "default"):
-        self.text_generator = CardTextGenerator(model) # used to be qwen2.5
+        self.generic_generator = GenericTextGenerator(model)
+        self.text_generator = self.generic_generator
+        self.exam_generator = self.generic_generator
         self.image_generator = ImageGenerator(style)
         self.voice_generator = VoiceGenerator()
 
@@ -25,28 +28,45 @@ class CardGenerator:
         if number_of_tries >= 5000:
             return "Failed to generate unique identifier"
 
+        logger.info("Exam generation successful.")
+
         return identifier
 
-    def generate_card(self, input: str, user_language: str, target_language: str, style: str = "default", voice: str = "female_06",):
+    def generate_exam(self, input, user_language: str, target_language: str):
+        logger.info("Attempting to generate exam from list of words: " + input)
+        logger.info("Fixed exam size set to 10 questions")
+        exam = self.exam_generator.list_to_exam(input, user_language, target_language)
+
+        if not exam:
+            logger.critical("Exam generation failed.")
+            return False
+
+        return exam
+
+    def generate_card(self, input: str, user_language: str, target_language: str, style: str = "default",
+                      voice: str = "female_06", ):
         voice_lang = "en"
-        if target_language == "Spanish": voice_lang = "es"
-        elif target_language == "Japanese": voice_lang = "ja"
-        elif target_language == "French": voice_lang = "fr"
+        if target_language == "Spanish":
+            voice_lang = "es"
+        elif target_language == "Japanese":
+            voice_lang = "ja"
+        elif target_language == "French":
+            voice_lang = "fr"
 
         logger.info("Generating card...")
         card = self.text_generator.text_to_card(input, user_language, target_language)
-        
+
         if not card:
             logger.critical("Card generation failed.")
             return False
-        
-        logger.info("Text generation succesful.")
+
+        logger.info("Text generation successful.")
         examples = card["examples"]
 
         logger.info("Generating voices for examples...")
         card.update({"examples_audio_path": []})
-        
-        #print(json.dumps(card, indent=4))
+
+        # print(json.dumps(card, indent=4))
 
         for example in examples:
             logger.info(f"Generating voice for example in {voice_lang}: {example}")
@@ -60,7 +80,7 @@ class CardGenerator:
         if UID == "failure":
             logger.critical("WARNING: UNIQUE IDENTIFIERS ARE NOT BEING GENERATED!")
             return False
-        
+
         card.update({"id": UID})
         card.update({"image": UID + "_00001_.png"})
 

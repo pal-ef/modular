@@ -13,7 +13,7 @@ class ImageGenerator:
         # request.urlopen(req)
         # if req.getcode() != 200: logger.critical("ComfyUI is not running.")
         self.set_style = style
-        with open("/home/jin/Projects/modular/workflow/" + style + ".json", "r", encoding="utf-8") as f:
+        with open("/home/jin/Code/modular/modular/workflow/" + style + ".json", "r", encoding="utf-8") as f:
             self.workflow = f.read()
 
     def queue_prompt(self, prompt: str):
@@ -31,7 +31,7 @@ class ImageGenerator:
             logger.info(f"Changing worflow from {self.set_style} to {style}")
             self.set_style = style
             self.workflow = None
-            with open("/home/jin/Projects/modular/workflow/" + style + ".json", "r", encoding="utf-8") as f:
+            with open("/home/jin/Code/modular/modular/workflow/" + style + ".json", "r", encoding="utf-8") as f:
                 self.workflow = f.read()
 
         prompt = json.loads(self.workflow)

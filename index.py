@@ -1,7 +1,7 @@
 from typing import Union
 from fastapi import FastAPI
 from pydantic import BaseModel
-import CardGenerator
+from bson import ObjectId
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +11,7 @@ from pymongo.server_api import ServerApi
 from typing import List
 from datetime import datetime, timezone, timedelta
 
+from Generator import Generator
 
 app = FastAPI()
 
@@ -31,7 +32,8 @@ app.add_middleware(
 )
 
 # TODO: Need to hide this
-uri = "mongodb+srv://Modular:FlashCardsModular@cluster0.mresw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+#uri = "mongodb+srv://Modular:FlashCardsModular@cluster0.mresw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+uri = "mongodb://localhost:27017/"
 
 # Create a new client and connect to the server
 client = MongoClient(uri, server_api=ServerApi('1'))
@@ -43,7 +45,7 @@ try:
 except Exception as e:
     print(e)
 
-cardgen = CardGenerator.CardGenerator("phi4", "default")
+generator = Generator("phi4", "default")
 
 def convert_to_dict(cursor):
     return [
@@ -68,6 +70,9 @@ class Deck(BaseModel):
     private: bool
     cards: List[str]
 
+class DeckInfo(BaseModel):
+    owner: str
+
 class Save(BaseModel):
     deck_name: str
     deck_owner: str
@@ -84,6 +89,9 @@ class Good(BaseModel):
     retained: int
     owner: str
 
+class UserID(BaseModel):
+    id: str
+
 collection = client['flashcards']['cards']
 
 
@@ -92,7 +100,7 @@ def generate_card(obj: Card):
     collection = client['flashcards']['cards']
 
     # Generate card
-    data = cardgen.generate_card(obj.text, obj.user_language, obj.target_language, obj.style)
+    data = generator.generate_card(obj.text, obj.user_language, obj.target_language, obj.style)
     # Add owner to card
     data["owner"] = obj.owner
     json_compatible_item_data = jsonable_encoder(data)
@@ -121,11 +129,18 @@ def create_deck(obj: Deck):
     # Return good if created successfully
     return {"message": "Explicit 200"}
 
-@app.get("/decks")
-def get_decks():
+
+# @app.get("/decks")
+# def get_decks():
+#     collection = client['flashcards']['decks']
+#     # TODO: Use user instead
+#     return list(collection.find({"owner": "Randy"}, {'_id': 0}))
+
+
+@app.post("/decks")
+def get_decks(obj: DeckInfo):
     collection = client['flashcards']['decks']
-    # TODO: Use user instead
-    return list(collection.find({"owner": "Randy"}, {'_id': 0}))
+    return list(collection.find({"owner": obj.owner}, {'_id': 0}))
 
 
 @app.post("/save")
@@ -172,6 +187,17 @@ def fetch_cards(obj: Fetch):
 
     return result_list
 
+@app.post("/fetch-all-cards")
+def fetch_all_cards(obj: Fetch):
+    collection = client['flashcards']['cards']
+
+    filter_query = {"part-of": obj.deck_name, "owner": obj.deck_owner}
+    result = collection.find(filter_query)
+
+    result_list = convert_to_dict(result)
+
+    return result_list
+
 @app.post("/good")
 def good(obj: Good):
     collection = client['flashcards']['cards']
@@ -211,3 +237,39 @@ def good(obj: Good):
 def read_item(item_id: int, q: Union[str, None] = None):
 
     return {"item_id": item_id, "q": q}
+
+@app.post("/pendingToday")
+def pending_today(id: UserID):
+    collection = client['flashcards']['cards']
+    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) 
+
+    filter_query = {"owner": id.id, "review": {"$lte": today}}
+    count = collection.count_documents(filter_query)
+
+    return count
+
+@app.get("/failed/{user_id}")
+def get_failed(user_id: str):
+    collection = client['modular_db']['users']
+    id_mongo = ObjectId(user_id)
+    filter_query = {"_id": id_mongo}
+    result = collection.find_one(filter_query)
+    print(result)
+    return str(result["failed"])
+
+
+@app.get("/failed_inc/{user_id}")
+def add_fail(user_id: str):
+    collection = client['modular_db']['users']
+    id_mongo = ObjectId(user_id)
+
+    filter_query = {"_id": id_mongo}
+    update = {'$inc': {'failed': 1}}
+    result = collection.update_one(filter_query, update)
+
+    if result.modified_count > 0:
+        print("Document updated successfully!")
+    else:
+        print("No document matched the query.")
+
+    return {"message": "Explicit 200"}

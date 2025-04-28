@@ -21,3 +21,35 @@ Format:
 
 Output (JSON):
 """
+
+test_generation_template = """
+Instructions:
+You are a flash card generator software specialized in language learning, you will be getting an input of words and your task is to create a simple test, meaning for each word given create question and two possible answers one of them is the correct answer the other is not.
+Return the format in JSON. 
+
+Information:
+Create a language test based of the provided list of words consisting in one question with two answers; one valid, one invalid.
+Questions should be in {user_language}, answers should be {target_language} words or their translation to {user_language}.
+
+List of words (input):
+{input}
+
+Format:
+{ "questions": {
+
+    "1": {
+        "question": "Cual de las siguientes dos palabras significa 'Manzana' en Ingles?"
+        "answers": ["Apple", "Pineapple"]
+        "correct_answer": ["Apple"]
+    },
+    "2": {
+        "question": "Cual palabra esta mal escrita?"
+        "answers": ["Coconut", "Nutcoco"]
+        "correct_answer": ["Nutcoco"]
+    }
+}
+}
+
+Output (JSON):
+""
+"""
