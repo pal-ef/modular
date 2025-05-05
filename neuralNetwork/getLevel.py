@@ -4,50 +4,36 @@ import pymongo
 import numpy as np
 import json
 
-def getUserLevel():
-
+def getUserLevel(newUser):
     model = tf.keras.models.load_model('user_level.h5')
 
-    with open('newUsers.json', 'r') as file:
-        data = json.load(file)
-
-    newUsers = []
-        
-    for i in data:
-        correct_answers_percentage=(i["respuestas_correctas"] / i["total_respuestas"])
-        average_time =(i["tiempo_respuestas"]/i["total_respuestas"])
-        sessions=i["sesiones_totales"]
-        flashcards_generated =i["flashcards_generadas"]
-        words_learned =i["palabras_aprendidas"]
-        learning_rate =i["palabras_aprendidas"]/i["sesiones_totales"]
-        activity_days =i["dias_actividad"]
-        accuracy_variation =((i["aciertos_semana_actual"]-i["aciertos_semana_pasada"])/i["aciertos_semana_pasada"])
-
-        user = (
-            correct_answers_percentage,
-            average_time,
-            sessions,
-            flashcards_generated,
-            words_learned,
-            learning_rate,
-            activity_days,
-            accuracy_variation
-        )
-
-        normalized_user = normalizeData(user)
-        newUsers.append(normalized_user)
-        print(user)
-        print(normalized_user)
-
-    print(f'cantidad: {len(newUsers)}')
-    newUsers=np.array(newUsers)
-    predictions = model.predict(newUsers)
+    correct_answers_percentage=(newUser["respuestas_correctas"] / newUser["total_respuestas"])
+    average_time =(newUser["tiempo_respuestas"]/newUser["total_respuestas"])
+    sessions=newUser["sesiones_totales"]
+    flashcards_generated =newUser["flashcards_generadas"]
+    words_learned =newUser["palabras_aprendidas"]
+    learning_rate =newUser["palabras_aprendidas"]/newUser["sesiones_totales"]
+    activity_days =newUser["dias_actividad"]
+    accuracy_variation =((newUser["aciertos_semana_actual"]-newUser["aciertos_semana_pasada"])/newUser["aciertos_semana_pasada"])
+    user = [
+        correct_answers_percentage,
+        average_time,
+        sessions,
+        flashcards_generated,
+        words_learned,
+        learning_rate,
+        activity_days,
+        accuracy_variation
+    ]
     
-    for i, prediction in enumerate(predictions):
-        predicted_class = np.argmax(prediction)  # El índice de la clase con la probabilidad más alta
-        print(f"Predicción para el usuario {i+1}:")
-        print("Predicción:", prediction)
-        print("Clase predicha:", predicted_class)
+    normalized_user = normalizeData(user)
+    user = np.array([normalized_user])
+    prediction = model.predict(user)
+    
+    predicted_class = int(np.argmax(prediction))
+
+    return predicted_class
+
 
 def normalizeData(user):
     min_vals = [0, 0, 1, 10, 1, 1, 1, -1]
@@ -66,5 +52,38 @@ def normalizeData(user):
         normalized_user.append(normalized_value)
     return normalized_user
 
+newUser={
+        "_id": "8",
+        "nombre": "Usuario 8",
+        "email": "user8@example.com",
+        "fecha_registro": "2025-02-23",
+        "nivel": "0",
+        "flashcards_generadas": 34,
+        "total_respuestas": 31,
+        "tiempo_respuestas": 380.23783718085997,
+        "respuestas_correctas": 14,
+        "sesiones_totales": 6,
+        "palabras_aprendidas": 12,
+        "dias_actividad": 62,
+        "aciertos_semana_pasada": 20,
+        "aciertos_semana_actual": 16
+    }
+print("Prediccion: ",getUserLevel(newUser))
 
-getUserLevel()
+newUser={
+        "_id": "9",
+        "nombre": "Usuario 9",
+        "email": "user9@example.com",
+        "fecha_registro": "2025-02-18",
+        "nivel": "2",
+        "flashcards_generadas": 553,
+        "total_respuestas": 650,
+        "tiempo_respuestas": 4035.8489415449285,
+        "respuestas_correctas": 575,
+        "sesiones_totales": 100,
+        "palabras_aprendidas": 372,
+        "dias_actividad": 69,
+        "aciertos_semana_pasada": 71,
+        "aciertos_semana_actual": 73
+    }
+print("Prediccion: ",getUserLevel(newUser))
