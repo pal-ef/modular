@@ -6,7 +6,7 @@ from bson import ObjectId
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-#from neuralNetwork.getLevel import getUserLevel
+from neuralNetwork.getLevel import getUserLevel
 
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -379,10 +379,9 @@ def fetch_exam(obj: ExamResult):
 
     return {"message": "Explicit 200"}
 
-#@app.post("/user-level")
-#def generate_exam(obj: User):
-
-    # Queries para sacar la info
-    #userLevel = getUserLevel(data)
-
-    #return userLevel
+@app.post("/user-level")
+def get_user_level(user: UserID):
+    collection = client['modular_db']['level_data']
+    cursor = collection.find({"user_id": user.id}, {"_id": 0, "user_id": 0})
+    result = convert_to_dict(cursor)
+    return getUserLevel(result[0])
