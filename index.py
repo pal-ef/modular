@@ -1,3 +1,4 @@
+import random
 from typing import Union
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -5,6 +6,7 @@ from bson import ObjectId
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+#from neuralNetwork.getLevel import getUserLevel
 
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -60,6 +62,23 @@ class Card(BaseModel):
     user_language: str
     target_language: str
     style: str
+
+class Exam(BaseModel):
+    words: List[str]
+    group_id: str
+    user_language: str
+    target_language: str
+    assigned_to: str
+    completed_by: str
+
+class ExamID(BaseModel):
+    id: str
+
+class ExamResult(BaseModel):
+    exam_id: str
+    score: int
+    total_questions: int
+    user_id: str
 
 class Deck(BaseModel):
     name: str
@@ -135,6 +154,13 @@ def create_deck(obj: Deck):
 #     collection = client['flashcards']['decks']
 #     # TODO: Use user instead
 #     return list(collection.find({"owner": "Randy"}, {'_id': 0}))
+
+def fisher_yates_shuffle(arr):
+    for i in range(len(arr) - 1, 0, -1):
+        j = random.randint(0, i)  # Pick a random index from 0 to i
+        arr[i], arr[j] = arr[j], arr[i]  # Swap
+    return arr  # Optional, since shuffling is in-place
+
 
 
 @app.post("/decks")
@@ -273,3 +299,90 @@ def add_fail(user_id: str):
         print("No document matched the query.")
 
     return {"message": "Explicit 200"}
+
+def mongo_jsonable_encoder(data):
+    if isinstance(data, ObjectId):
+        return str(data)
+    elif isinstance(data, dict):
+        return {k: mongo_jsonable_encoder(v) for k, v in data.items()}
+    elif isinstance(data, (list, tuple)):
+        return [mongo_jsonable_encoder(item) for item in data]
+    return jsonable_encoder(data)
+
+@app.post("/generate-exam")
+def generate_exam(obj: Exam):
+    collection = client['modular_db']['exams']
+
+    # Generate exam
+    exam = generator.generate_exam(obj.words, obj.user_language, obj.target_language)
+
+    # Set extra metadata
+    exam["group_id"] = obj.group_id
+    exam["assigned_to"] = obj.assigned_to
+    exam["completed_by"] = ""
+
+    # Shuffle answers for each question
+    for question in exam["questions"]:
+        question["answers"] = fisher_yates_shuffle(question["answers"])
+
+    res = collection.insert_one({
+        "questions": exam["questions"],
+        "group_id": obj.group_id,
+        "assigned_to": obj.assigned_to,
+        "completed_by": []
+    })
+
+    exam["id"] = str(res.inserted_id)
+    json_compatible_item_data = jsonable_encoder(exam)
+
+    return JSONResponse(content=json_compatible_item_data)
+
+@app.post("/fetch-exam")
+def fetch_exam(obj: ExamID):
+    collection = client['modular_db']['exams']
+
+    id_mongo = ObjectId(obj.id)
+    filter_query = {"_id": id_mongo}
+    result = collection.find_one(filter_query, {'_id': 0})
+
+    return result
+
+@app.post("/fetch-completed-exams")
+def fetch_completed_exams(obj: UserID):
+    collection = client['modular_db']['exam_results']
+    cursor = collection.find({"user_id": obj.id}, {"_id": 0, "user_id": 0})
+    result = convert_to_dict(cursor)
+    return result
+
+@app.post("/save-score")
+def fetch_exam(obj: ExamResult):
+    # Fetch exam
+    collection = client['modular_db']['exams']
+    id_mongo = ObjectId(obj.exam_id)
+    filter_query = {"_id": id_mongo}
+    update = {'$push': {'completed_by': obj.user_id}}
+    result = collection.update_one(filter_query, update)
+
+    if result.modified_count > 0:
+        print("Document updated successfully!")
+    else:
+        print("No document matched the query.")
+
+    collection = client['modular_db']['exam_results']
+
+    collection.insert_one({
+        "exam_id": obj.exam_id,
+        "score": obj.score,
+        "total_questions": obj.total_questions,
+        "user_id": obj.user_id
+    })
+
+    return {"message": "Explicit 200"}
+
+#@app.post("/user-level")
+#def generate_exam(obj: User):
+
+    # Queries para sacar la info
+    #userLevel = getUserLevel(data)
+
+    #return userLevel

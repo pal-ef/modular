@@ -32,6 +32,7 @@ class GenericTextGenerator:
 
         # Loading template
         logger.info("Loading template...")
+        self.set_template = template
         template: ChatPromptTemplate = ChatPromptTemplate.from_template(template)
         logger.info("Template loaded into memory.")
 
@@ -137,6 +138,7 @@ class GenericTextGenerator:
     def change_template(self, template: str) -> None:
         # Load template
         logger.info("Loading template...")
+        self.set_template = template
         template: ChatPromptTemplate = ChatPromptTemplate.from_template(template)
         logger.info("Template loaded into memory.")
 
@@ -149,3 +151,15 @@ class GenericTextGenerator:
 
     def use_card_template(self):
         self.change_template(card_generation_template)
+
+    def is_generating_cards(self):
+        if self.set_template == card_generation_template:
+            return True
+
+        return False
+
+    def is_generating_exams(self):
+        if self.set_template == test_generation_template:
+            return True
+
+        return False

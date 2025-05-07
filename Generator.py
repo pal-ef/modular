@@ -32,10 +32,15 @@ class Generator:
 
         return identifier
 
-    def generate_exam(self, input, user_language: str, target_language: str):
-        logger.info("Attempting to generate exam from list of words: " + input)
+    def generate_exam(self, words, user_language: str, target_language: str):
+        logger.info("Attempting to generate exam from list of words: " + str(words))
         logger.info("Fixed exam size set to 10 questions")
-        exam = self.exam_generator.list_to_exam(input, user_language, target_language)
+
+        if not self.generic_generator.is_generating_exams():
+            logger.info("Generator was set to generate Cards, changing to generate Exam...")
+            self.generic_generator.use_exam_template()
+
+        exam = self.exam_generator.list_to_exam(words, user_language, target_language)
 
         if not exam:
             logger.critical("Exam generation failed.")
@@ -52,6 +57,10 @@ class Generator:
             voice_lang = "ja"
         elif target_language == "French":
             voice_lang = "fr"
+
+        if not self.generic_generator.is_generating_cards():
+            logger.info("Generator was set to generate Exams, changing to generate Cards...")
+            self.generic_generator.use_card_template()
 
         logger.info("Generating card...")
         card = self.text_generator.text_to_card(input, user_language, target_language)

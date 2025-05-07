@@ -35,20 +35,21 @@ List of words (input):
 {input}
 
 Format:
-{ "questions": {
+{{ "questions": [
 
-    "1": {
-        "question": "Cual de las siguientes dos palabras significa 'Manzana' en Ingles?"
+    {{
+        "question": "¿Cual de las siguientes dos palabras significa 'Manzana' en Ingles?"
         "answers": ["Apple", "Pineapple"]
         "correct_answer": ["Apple"]
-    },
-    "2": {
-        "question": "Cual palabra esta mal escrita?"
+    }},
+    {{
+        "question": "¿Cual palabra esta mal escrita?"
         "answers": ["Coconut", "Nutcoco"]
         "correct_answer": ["Nutcoco"]
-    }
-}
-}
+    }}
+]
+
+}}
 
 Output (JSON):
 ""
