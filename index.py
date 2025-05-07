@@ -379,9 +379,10 @@ def fetch_exam(obj: ExamResult):
 
     return {"message": "Explicit 200"}
 
-@app.post("/user-level")
-def get_user_level(user: UserID):
+@app.get("/user-level/{userId}")
+def get_user_level(userId: str):
     collection = client['modular_db']['level_data']
-    cursor = collection.find({"user_id": user.id}, {"_id": 0, "user_id": 0})
+    cursor = collection.find({"user_id": userId}, {"_id": 0, "user_id": 0})
     result = convert_to_dict(cursor)
-    return getUserLevel(result[0])
+    #return getUserLevel(result[0])
+    return 0
